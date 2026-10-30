@@ -40,7 +40,7 @@ export function AudioBar() {
     });
     const scale = [261.63, 293.66, 329.63, 392, 440, 523.25];
     const bell = () => {
-      const t = ctx.currentTime, f = scale[Math.floor(Math.random() * scale.length)] * 2;
+      const t = ctx.currentTime, f = (scale[Math.floor(Math.random() * scale.length)] ?? 261.63) * 2;
       [1, 2.76, 5.4].forEach((m, k) => {
         const o = ctx.createOscillator(); o.frequency.value = f * m;
         const g = ctx.createGain(); g.gain.setValueAtTime(0.12 / (k + 1), t); g.gain.exponentialRampToValueAtTime(0.0001, t + 3);
