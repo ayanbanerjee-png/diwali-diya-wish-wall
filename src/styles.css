@@ -108,3 +108,11 @@
 @utility animate-flicker { animation: flicker 1.2s ease-in-out infinite; transform-origin: bottom center; }
 @utility animate-spark { animation: spark 1.4s ease-out forwards; }
 @utility animate-pop-in { animation: pop-in .5s cubic-bezier(.3,1.6,.5,1) both; }
+
+:root { --kumkum: oklch(0.55 0.21 25); --marigold: oklch(0.78 0.17 65); }
+@keyframes aarti { to { transform: rotate(360deg); } }
+@keyframes bell { 0%,100% { transform: rotate(0); } 20% { transform: rotate(25deg); } 40% { transform: rotate(-20deg); } 60% { transform: rotate(12deg); } 80% { transform: rotate(-6deg); } }
+@keyframes petal { 0% { transform: translateY(0) rotate(0); opacity: 0; } 10% { opacity: 1; } 100% { transform: translateY(110vh) translateX(60px) rotate(540deg); opacity: .7; } }
+@utility animate-aarti { animation: aarti 6s linear infinite; transform-origin: center; }
+@utility animate-bell { animation: bell 1s ease-out; transform-origin: top center; }
+@utility animate-petal { animation: petal linear forwards; }
