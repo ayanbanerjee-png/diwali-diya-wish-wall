@@ -4,6 +4,8 @@ import { Flame, Moon, Sunset, Users, Send, Sparkles } from "lucide-react";
 import { Ambient } from "@/components/Ambient";
 import { AudioBar } from "@/components/AudioBar";
 import { Diya } from "@/components/Diya";
+import { supabase } from "@/integrations/supabase/client";
+import { toast, Toaster } from "sonner";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -18,40 +20,58 @@ export const Route = createFileRoute("/")({
 });
 
 const TARGET = new Date("2026-11-08T00:00:00+05:30").getTime();
-type Wish = { id: number; name: string; text: string; at: number };
-const SEED: Wish[] = [
-  { id: 1, name: "Ananya", text: "May your home glow with joy and prosperity. Shubh Deepavali!", at: 0 },
-  { id: 2, name: "Rahul", text: "Wishing everyone light, love and laddoos 🪔", at: 0 },
-];
+type Wish = { id: string; name: string; text: string };
+type Row = { id: string; name: string; message: string };
+const toWish = (r: Row): Wish => ({ id: r.id, name: r.name, text: r.message });
 
 function Index() {
   const [evening, setEvening] = useState(false);
   const [left, setLeft] = useState<number | null>(null);
   const [diyas, setDiyas] = useState(0);
-  const [base, setBase] = useState(1008);
+  const [base, setBase] = useState(0);
   const [online, setOnline] = useState(108);
-  const [wishes, setWishes] = useState<Wish[]>(SEED);
+  const [wishes, setWishes] = useState<Wish[]>([]);
   const [name, setName] = useState("");
   const [text, setText] = useState("");
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     setDiyas(+(localStorage.getItem("dd-diyas") ?? 0));
-    setBase(1008 + Math.floor(Math.random() * 200));
-    const w = localStorage.getItem("dd-wishes"); if (w) setWishes(JSON.parse(w));
+    supabase.from("diya_lights").select("id", { count: "exact", head: true }).then(({ count }) => setBase(count ?? 0));
+    supabase.from("wishes").select("id,name,message").order("created_at", { ascending: false }).limit(50)
+      .then(({ data }) => data && setWishes(data.map(toWish)));
+    const ch = supabase.channel(`digidiwali-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "diya_lights" }, () => setBase((b) => b + 1))
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "wishes" }, (p) => {
+        const w = toWish(p.new as Row);
+        setWishes((prev) => (prev.some((x) => x.id === w.id) ? prev : [w, ...prev].slice(0, 50)));
+      })
+      .subscribe();
     const tick = () => setLeft(Math.max(0, TARGET - Date.now()));
     tick();
     const t = setInterval(tick, 1000);
     const o = setInterval(() => setOnline((n) => Math.max(100, n + Math.round(Math.random() * 6 - 3))), 3000);
-    return () => { clearInterval(t); clearInterval(o); };
+    return () => { clearInterval(t); clearInterval(o); supabase.removeChannel(ch); };
   }, []);
   useEffect(() => { document.documentElement.classList.toggle("evening", evening); }, [evening]);
 
-  const light = () => { const n = diyas + 1; setDiyas(n); localStorage.setItem("dd-diyas", String(n)); };
-  const post = (e: React.FormEvent) => {
+  const light = async () => {
+    const n = diyas + 1; setDiyas(n); localStorage.setItem("dd-diyas", String(n));
+    const { error } = await supabase.from("diya_lights").insert({});
+    if (error) toast.error("Couldn't light your diya, please try again.");
+  };
+  const post = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !text.trim()) return;
-    const next = [{ id: Date.now(), name: name.trim().slice(0, 40), text: text.trim().slice(0, 280), at: Date.now() }, ...wishes].slice(0, 50);
-    setWishes(next); localStorage.setItem("dd-wishes", JSON.stringify(next)); setText("");
+    if (!name.trim() || !text.trim() || sending) return;
+    setSending(true);
+    const { data, error } = await supabase.from("wishes")
+      .insert({ name: name.trim().slice(0, 40), message: text.trim().slice(0, 280) })
+      .select("id,name,message").single();
+    setSending(false);
+    if (error || !data) return void toast.error("Couldn't post your wish, please try again.");
+    const w = toWish(data);
+    setWishes((prev) => (prev.some((x) => x.id === w.id) ? prev : [w, ...prev]));
+    setText("");
   };
 
   const s = (left ?? 0) / 1000;
