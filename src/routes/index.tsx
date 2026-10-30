@@ -116,7 +116,7 @@ function Index() {
 
         <section className="mt-20 rounded-3xl glass p-6 text-center sm:p-10">
           <h2 className="font-serif text-3xl">Light a Diya</h2>
-          <p className="mt-1 text-sm text-muted-foreground"><span className="text-primary">{(base + diyas).toLocaleString()}</span> diyas lit worldwide · {diyas} by you</p>
+          <p className="mt-1 text-sm text-muted-foreground"><span className="text-primary">{base.toLocaleString()}</span> diyas lit worldwide · {diyas} by you</p>
           <button onClick={light} className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3 font-medium text-primary-foreground glow transition hover:scale-105 active:scale-95">
             <Sparkles size={18} /> Light a Diya
           </button>
@@ -136,7 +136,7 @@ function Index() {
             <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Write a Wish/Greeting" maxLength={280} rows={3}
               className="resize-none rounded-xl border bg-transparent px-4 py-2.5 outline-none focus:ring-2 focus:ring-ring" />
             <button className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary py-2.5 font-medium text-primary-foreground transition hover:opacity-90">
-              <Send size={16} /> Share Blessing
+              <Send size={16} /> {sending ? "Sharing…" : "Share Blessing"}
             </button>
           </form>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -150,6 +150,7 @@ function Index() {
         </section>
       </main>
       <AudioBar />
+      <Toaster theme="dark" position="top-center" />
     </div>
   );
 }
