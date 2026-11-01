@@ -22,7 +22,11 @@ export function Journey() {
         <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{d.date[lang]}</p>
         <h3 className="mt-1 font-display text-4xl text-primary text-glow">{d.name[lang]}</h3>
         <p className="mt-3 text-sm text-muted-foreground">{d.about[lang]}</p>
-        <p className="mt-4 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs"><Clock size={12} className="text-primary" /> {d.time[lang]}</p>
+        <ul className="mt-4 space-y-1.5">
+          {d.time[lang].split(" · ").map((m, k) => (
+            <li key={k} className="flex items-start gap-2 rounded-xl border px-3 py-1.5 text-xs"><Clock size={12} className="mt-0.5 shrink-0 text-primary" /> {m}</li>
+          ))}
+        </ul>
         <div className="mt-6 grid gap-6 sm:grid-cols-2">
           <div>
             <h4 className="font-serif text-xl">{t("rituals")}</h4>
